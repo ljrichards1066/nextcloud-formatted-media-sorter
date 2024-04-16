@@ -4,19 +4,31 @@ import PIL.Image
 from datetime import datetime
 import shutil
 import logging
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--path", "-p", type=str, dest= "startpath", required=True)
+parser.add_argument("--destinationpath", "-dp", type=str, dest= "destinationpath", required=True)
+args = parser.parse_args()
+if '\\' in args:
+    slash = '\\'
+else:
+    slash = '/'
+
 
 def main():
     now = datetime.now()
     ext = (".gif", ".jpeg", ".jpg", ".png")
-    input_verify()
-    os.chdir(sys.argv[1])
+    input_verify(args)
+    os.chdir(args.startpath)
     logging.basicConfig(format='%(levelname)s (%(asctime)s): %(message)s (line: %(lineno)d [%(filename)s])', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO, filename="photobackup.log")
     create_completed()
     filelist = os.listdir()
     logging.info("Begining Backup")
     for file in filelist:
         datedict = None
-        os.chdir(sys.argv[1])
+        os.chdir(args.startpath)
         if file.lower().endswith(ext):
             datedict = exifextract(file)
             if(datedict):
@@ -30,6 +42,8 @@ def main():
                 create_path(datedict)
             transferto_destination(datedict)
             logging.info ("Moving " + file + " to the Completed Folder.")
+            if os.path.exists(args.startpath + slash + "completed" + slash + file):
+                os.remove(args.startpath + slash + "completed" + slash + file)
             shutil.move(file, "completed")
     logging.info("Backup Complete")
 
@@ -54,15 +68,12 @@ def exifextract(file):
     else:
         return None
     
-def input_verify():
-    if len(sys.argv) != 3:
-        print("Incorrect number of command line arguments")
+def input_verify(args):
+    if(os.path.exists(args.startpath) is False or os.path.isdir(args.startpath) is False):
+        print("Starting Path Missing or invalid")
         sys.exit(1)
-    if(os.path.exists(sys.argv[1]) is False or os.path.isdir(sys.argv[1]) is False):
-        print("Starting Path is invalid")
-        sys.exit(1)
-    if(os.path.exists(sys.argv[2]) is False or os.path.isdir(sys.argv[2]) is False):
-        print("Destination Path is invalid")
+    if(os.path.exists(args.destinationpath) is False or os.path.isdir(args.destinationpath) is False):
+        print("Destination Path Missing or invalid")
         sys.exit(1)
 
 def create_completed():
@@ -77,7 +88,7 @@ def create_path(datedict):
     
     year = (datedict["year"])
     month = (datedict["month"])
-    os.chdir(sys.argv[2])
+    os.chdir(args.destinationpath)
     if(os.path.isdir(year)):
         logging.info("Year directory already present.")
     else:
@@ -93,15 +104,11 @@ def create_path(datedict):
     os.chdir(month)
 
 def transferto_destination(datedict):
-    if '\\' in sys.argv:
-        slash = '\\'
-    else:
-        slash = '/'
-    os.chdir(sys.argv[1])
+    os.chdir(args.startpath)
     year = (datedict["year"])
     month = (datedict["month"])
     file = (datedict["file"])
-    destpath = sys.argv[2] + slash + year + slash + month + slash + file
+    destpath = args.destinationpath + slash + year + slash + month + slash + file
     if(os.path.exists(destpath)):
         logging.info(file + " already exists at destination.")
     else:
