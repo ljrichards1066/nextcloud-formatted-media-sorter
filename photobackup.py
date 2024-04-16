@@ -37,7 +37,7 @@ def main():
             else:
                 logging.info("No Date Metadata found for " + file + ". Proceeding with Runtime based sorting")
                 year = str(now.year)
-                month = str(now.month)
+                month = str(now.month).zfill(2)
                 datedict = {"year":(year),"month":(month),"file":file}
                 create_path(datedict)
             transferto_destination(datedict)
@@ -59,7 +59,7 @@ def exifextract(file):
         datesplit = (datetimesplit[0]).split(":")
         year = datesplit[0]
         month = datesplit[1]
-        month = month.lstrip("0")
+        #month = month.lstrip("0")
         datedict.update({"year":year,"month":month,"file":file})   
     except:TypeError
 
