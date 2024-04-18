@@ -7,46 +7,67 @@ import logging
 import argparse
 import ffmpeg
 
+#Define user inputted arguments 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--path", "-p", type=str, dest= "startpath", required=True)
 parser.add_argument("--destinationpath", "-dp", type=str, dest= "destinationpath", required=True)
 args = parser.parse_args()
+
+#Provision for Windows paths
 if '\\' in args:
     slash = '\\'
 else:
     slash = '/'
 
+#Define Logging Preferences
+logging.basicConfig(format='%(levelname)s (%(asctime)s): %(message)s (line: %(lineno)d [%(filename)s])', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO, filename="videobackup.log")
+
 
 def main():
     now = datetime.now()
     ext = (".mov", ".mp4", ".avi", ".m4v")
+    #Make sure that required arguments were provided and that the paths exist
     input_verify(args)
+    #Change Directory to the given starting path
     os.chdir(args.startpath)
-    logging.basicConfig(format='%(levelname)s (%(asctime)s): %(message)s (line: %(lineno)d [%(filename)s])', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO, filename="videobackup.log")
-    create_completed()
+    #List all files in the Starting Directory
     filelist = os.listdir()
-    logging.info("Begining Backup")
+    backupstart = None
+    #Loop through the files to see if they have extensions photo extensions
     for file in filelist:
         datedict = None
+        #Ensure that the directory is always changed back to the Starting directory
         os.chdir(args.startpath)
         if file.lower().endswith(ext):
+            #Ensure that the "Begining Backup log is only given once and not given if nothing was done"
+            if backupstart is None:
+                logging.info("Begining Backup")
+                backupstart = True
+                #Create the directory to move the files to once copied
+                create_completed()
+            #Extract the Creation Date Metadata
             datedict = metadataextract(file)
+            #Check if the metadata was present and successfully added to the dictionary
+            #If it was not pulled and added, it will set the date to the current date and month
             if(datedict):
                 logging.info("Date metadata extracted for " + file)
-                create_path(datedict)
             else:
                 logging.info("No Date Metadata found for " + file + ". Proceeding with Runtime based sorting")
                 year = str(now.year)
                 month = str(now.month).zfill(2)
                 datedict = {"year":(year),"month":(month),"file":file}
-                create_path(datedict)
+            #create the path using the month and year created above
+            create_path(datedict)
+            #Copy file to the provided destination using the previously created folder structure.
             transferto_destination(datedict)
             logging.info ("Moving " + file + " to the Completed Folder.")
             if os.path.exists(args.startpath + slash + "completed" + slash + file):
                 os.remove(args.startpath + slash + "completed" + slash + file)
+            #Move the file to the "completed folder"
             shutil.move(file, "completed")
-    logging.info("Backup Complete")
+    if backupstart is not None:
+        logging.info("Backup Complete")
 
 def metadataextract(file):
 
