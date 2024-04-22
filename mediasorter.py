@@ -23,7 +23,7 @@ else:
     slash = '/'
 
 #Define Logging Preferences
-logging.basicConfig(format='%(levelname)s (%(asctime)s): %(message)s (line: %(lineno)d [%(filename)s])', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO, filename="mediasorter.log")
+#logging.basicConfig(format='%(levelname)s (%(asctime)s): %(message)s (line: %(lineno)d [%(filename)s])', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO, filename="mediasorter.log")
 
 
 def main():
@@ -34,6 +34,8 @@ def main():
     input_verify(args)
     #Change Directory to the given starting path
     os.chdir(args.startpath)
+    #Define Logging Preferences
+    logging.basicConfig(format='%(levelname)s (%(asctime)s): %(message)s (line: %(lineno)d [%(filename)s])', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO, filename="mediasorter.log")
     #List all files in the Starting Directory
     filelist = os.listdir()
     backupstart = None
