@@ -132,9 +132,11 @@ def exifextract(file):
 
     datedict = {"year":None,"month":None,"day":None}
     #file = "test.jpg"
-    img = PIL.Image.open(file)
-    exif_data = img._getexif()
-
+    try:
+        img = PIL.Image.open(file)
+        exif_data = img._getexif()
+    except:
+        logging.error("Unable to to open " + file)
     try:
         datetimesplit = (exif_data[306]).split(" ")
         datesplit = (datetimesplit[0]).split(":")
